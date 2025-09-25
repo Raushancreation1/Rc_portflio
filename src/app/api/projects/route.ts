@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongoose';
 import Project from '@/models/Project';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 export async function GET() {
   try {
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json({ ok: false, error: 'Server not configured: MONGODB_URI is missing' }, { status: 500 });
+    }
     await dbConnect();
     const docs = await Project.find({}).sort({ _id: -1 }).lean();
     const projects = docs.map((d: any) => ({ ...d, id: String(d._id), _id: undefined }));
@@ -21,6 +27,9 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json({ ok: false, error: 'Server not configured: MONGODB_URI is missing' }, { status: 500 });
+    }
     await dbConnect();
     const body = await req.json();
     const { id, ...updates } = body || {};
@@ -69,6 +78,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'tags must be an array of strings' }, { status: 400 });
     }
 
+    if (!process.env.MONGODB_URI) {
+      return NextResponse.json({ ok: false, error: 'Server not configured: MONGODB_URI is missing' }, { status: 500 });
+    }
     await dbConnect();
     const doc = await Project.create({
       title,
